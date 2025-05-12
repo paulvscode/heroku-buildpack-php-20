@@ -9,7 +9,7 @@ set -eu
 # move hidden files too, just in case
 shopt -s dotglob
 
-STACK=${STACK:-heroku-18} # Anvil has none
+#STACK=${STACK:-heroku-18} # Anvil has none
 build_dir=$1
 cache_dir=$2/php
 mkdir -p "$cache_dir"
@@ -200,7 +200,10 @@ mkdir -p $COMPOSER_HOME
 
 status "Bootstrapping..."
 
+# change of STACK 
+STACK=heroku-20
 s3_url="https://lang-php.s3.amazonaws.com/dist-heroku-20-stable/"
+echo "Using PHP-min from: ${s3_url}php-min-7.4.27.tar.gz"
 
 # prepend the default repo to the list configured by the user
 # list of repositories to use is in ascening order of precedence
@@ -219,16 +222,22 @@ fi
 mkdir -p $build_dir/.heroku/php-min
 ln -s $build_dir/.heroku/php-min /app/.heroku/php-min
 
-curl_retry_on_18 --fail --silent --location -o $build_dir/.heroku/php-min.tar.gz "${s3_url}php-min-7.4.27.tar.gz" || {
-	mcount "failures.bootstrap.download.php-min"
-	error <<-EOF
-		Failed to download minimal PHP for bootstrapping!
+# curl_retry_on_18 --fail --silent --location -o $build_dir/.heroku/php-min.tar.gz "${s3_url}php-min-7.4.27.tar.gz" || {
+# 	mcount "failures.bootstrap.download.php-min"
+# 	error <<-EOF
+# 		Failed to download minimal PHP for bootstrapping!
 		
-		This is most likely a temporary internal error. If the problem
-		persists, make sure that you are not running a custom or forked
-		version of the Heroku PHP buildpack which may need updating.
-	EOF
+# 		This is most likely a temporary internal error. If the problem
+# 		persists, make sure that you are not running a custom or forked
+# 		version of the Heroku PHP buildpack which may need updating.
+# 	EOF
+# }
+
+curl --fail --silent --location -o "$build_dir/.heroku/php-min.tar.gz" "${s3_url}php-min-7.4.27.tar.gz" || {
+    echo "ERROR: Failed to fetch ${s3_url}php-min-7.4.27.tar.gz"
+    exit 1
 }
+
 tar xzf $build_dir/.heroku/php-min.tar.gz -C $build_dir/.heroku/php-min
 rm $build_dir/.heroku/php-min.tar.gz
 
